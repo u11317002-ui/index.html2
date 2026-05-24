@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雙語互動繪本 - 幫小熊買水果</title>
+    <style>
+        :root {
+            --primary-color: #ffb703;
+            --secondary-color: #fb8500;
+            --bg-color: #f8edeb;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            font-size: 2rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .lang-switch {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .lang-switch:hover {
+            transform: scale(1.05);
+        }
+
+        .book-container {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            border: 8px solid #ffddd2;
+        }
+
+        .story-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .story-text {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            margin: 20px 0;
+            min-height: 80px;
+            font-weight: bold;
+        }
+
+        .interactive-area {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            min-height: 120px;
+        }
+
+        .fruit-btn {
+            background: #fff;
+            border: 3px solid var(--primary-color);
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100px;
+        }
+
+        .fruit-btn span {
+            font-size: 1rem;
+            margin-top: 5px;
+            color: #555;
+        }
+
+        .fruit-btn:hover {
+            transform: translateY(-5px);
+            background-color: #fff3cd;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 id="main-title">🐻 幫小熊買水果</h1>
+        <button class="lang-switch" onclick="toggleLanguage()" id="lang-btn">English</button>
+    </header>
+
+    <div class="book-container">
+        <div class="story-text">
+            <span id="story-content">小熊肚子餓了，想去市場買水果。我們一起出發吧！</span>
+            <button class="audio-btn" onclick="speakText()">🔊</button>
+        </div>
+
+        <div id="image-area">
+            <span style="font-size: 8rem;">🐻🛒</span>
+        </div>
+
+        <div class="interactive-area" id="interactive-box">
+            </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-btn" id="prev-btn" onclick="changePage(-1)" disabled>上一頁 / Prev</button>
+        <button class="nav-btn" id="next-btn" onclick="changePage(1)">下一頁 / Next</button>
+    </div>
+
+    <script>
+        // 語言狀態：'zh' 為中文，'en' 為英文
+        let currentLang = 'zh';
+        let currentPage = 0;
+
+        // 繪本每一頁的資料集
+        const storyData = [
+            {
+                zh: "小熊肚子餓了，想去市場買水果。我們一起出發吧！",
+                en: "Little Bear is hungry and wants to buy some fruits at the market. Let's go together!",
+                image: "🐻🛒",
+                type: "intro"
+            },
+            {
+                zh: "小熊來到了第一個攤位。小熊說：「我想買紅色的蘋果。」請幫小熊找到蘋果！",
+                en: "Little Bear arrives at the first stall. He says, 'I want to buy a red apple.' Please help him find the apple!",
+                image: "🍎",
+                type: "game",
+                target: "apple",
+                options: [
+                    { id: "apple", zh: "蘋果", en: "Apple", icon: "🍎" },
+                    { id: "banana", zh: "香蕉", en: "Banana", icon: "🍌" },
+                    { id: "watermelon", zh: "西瓜", en: "Watermelon", icon: "🍉" }
+                ],
+                successZh: "太棒了！你幫小熊找到了多汁的蘋果！",
+                successEn: "Great job! You found the juicy apple for Little Bear!"
+            },
+            {
+                zh: "接著，小熊想要買黃色的香蕉。香蕉在哪裡呢？",
+                en: "Next, Little Bear wants to buy a yellow banana. Where is the banana?",
+                image: "🍌",
+                type: "game",
+                target: "banana",
+                options: [
+                    { id: "grape", zh: "葡萄", en: "Grapes", icon: "🍇" },
+                    { id: "banana", zh: "香蕉", en: "Banana", icon: "🍌" },
+                    { id: "orange", zh: "橘子", en: "Orange", icon: "🍊" }
+                ],
+                successZh: "答對了！香蕉甜甜的很好吃！",
+                successEn: "Correct! Bananas are sweet and delicious!"
+            },
+            {
+                zh: "最後，小熊想買一個大西瓜在夏天消暑。請指給牠看！",
+                en: "Finally, Little Bear wants a big watermelon to cool down in the summer. Please show him!",
+                image: "🍉",
+                type: "game",
+                target: "watermelon",
+                options: [
+                    { id: "strawberry", zh: "草莓", en: "Strawberry", icon: "🍓" },
+                    { id: "pineapple", zh: "鳳梨", en: "Pineapple", icon: "🍍" },
+                    { id: "watermelon", zh: "西瓜", en: "Watermelon", icon: "🍉" }
+                ],
+                successZh: "太厲害了！西瓜看起來真消暑！",
+                successEn: "Amazing! The watermelon looks so refreshing!"
+            },
+            {
+                zh: "謝謝你的幫忙！小熊買到了所有想吃的水果，現在高興地回家囉！",
+                en: "Thank you for your help! Little Bear bought all the fruits he wanted and is happily heading home now!",
+                image: "🐻🥰🍓🍎🍌🍉",
+                type: "outro"
+            }
+        ];
+
+        // 渲染頁面
+        function renderPage() {
+            const page = storyData[currentPage];
+            
+            // 更新文字
+            document.getElementById('story-content').innerText = page[currentLang];
+            
+            // 更新圖片/Emoji
+            document.getElementById('image-area').innerHTML = `<div style="font-size: 8rem; margin: 20px 0;">${page.image}</div>`;
+            
+            // 更新互動區
+            const interactiveBox = document.getElementById('interactive-box');
+            interactiveBox.innerHTML = '';
+            
+            if (page.type === 'game') {
+                page.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'fruit-btn';
+                    btn.innerHTML = `${opt.icon} <span>${currentLang === 'zh' ? opt.zh : opt.en}</span>`;
+                    btn.onclick = () => checkAnswer(opt.id, page);
+                    interactiveBox.appendChild(btn);
+                });
+            }
+
+            // 控制導覽按鈕狀態
+            document.getElementById('prev-btn').disabled = currentPage === 0;
+            document.getElementById('next-btn').disabled = currentPage === storyData.length - 1;
+        }
+
+        // 檢查互動答案
+        function checkAnswer(selectedId, page) {
+            if (selectedId === page.target) {
+                document.getElementById('story-content').innerText = page[`success${currentLang.charAt(0).toUpperCase() + currentLang.slice(1)}`];
+                alert(currentLang === 'zh' ? "🎉 答對了！" : "🎉 Correct!");
+            } else {
+                alert(currentLang === 'zh' ? "❌ 再試一次看看！" : "❌ Try again!");
+            }
+        }
+
+        // 切換中英文
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('lang-btn').innerText = currentLang === 'zh' ? 'English' : '繁體中文';
+            document.getElementById('main-title').innerText = currentLang === 'zh' ? '🐻 幫小熊買水果' : '🐻 Help Little Bear Buy Fruits';
+            renderPage();
+        }
+
+        // 上下頁控制
+        function changePage(direction) {
+            currentPage += direction;
+            if (currentPage < 0) currentPage = 0;
+            if (currentPage >= storyData.length) currentPage = storyData.length - 1;
+            renderPage();
+        }
+
+        // 瀏覽器內建語音朗讀 (TTS 功能)
+        function speakText() {
+            const text = document.getElementById('story-content').innerText;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = currentLang === 'zh' ? 'zh-TW' : 'en-US';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 初始化第一頁
+        renderPage();
+    </script>
+</body>
+</html>
